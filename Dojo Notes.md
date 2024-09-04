@@ -11,8 +11,8 @@
 ### .06 - find and exec
 
 - "Optional Exercise: Why do they think it worked with `-exec` parameter of the `find` command, but we get permission denied using standalone `cat` command? Hint: SUID bit was set for the `find` command."
-- indeed, we see that `/usr/bin/find` has its *setuid* bit set:
-![-rwsr-xr-x 1 root root 320160 Feb 18  2020 /usr/bin/find*](ss1.png)
+- indeed, we see that `/usr/bin/find` has its _setuid_ bit set:
+  ![-rwsr-xr-x 1 root root 320160 Feb 18  2020 /usr/bin/find*](ss1.png)
 - [see here](https://unix.stackexchange.com/a/389706/595039) for find stuff
 - `find / -name random_cant_flag -exec cat {} ';'` worked
 
@@ -82,7 +82,7 @@
 ### .05 - extra verification
 
 - angr just straight up hangs lol
-- holy sh*t so many if statements
+- holy sh\*t so many if statements
 - boils down to byte by byte, check 1 or 0, check +ve or -ve (MSB)
   - 00 - 00110111
   - 01 - 01000111
@@ -113,3 +113,30 @@
 - so for each if statement, check which of 0/1 makes it false (find and replace ftw)
 - ascii string is 67kW6YnKvTpaqoBX1F8l
 - really should have automated this
+
+### .07 - binary labyrinth
+
+- omg it's literally labyrinth navigation, using wasd keys LMFAO
+
+```c
+int M[12][12]={
+  { 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+  { 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0},
+  { 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1},
+  { 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1},
+  { 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1},
+  { 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1},
+  { 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1},
+  { 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1},
+  { 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1},
+  { 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1},
+  { 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1},
+  { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+};
+```
+
+- 1s are landmines
+- start from row 1, column 2 (x=1, y=0)
+- goal is row 2, column 12 (x=0xb, y=1)
+- ssssdsssddsssdddwwwddwwwwdwwd
+- lol
