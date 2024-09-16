@@ -140,3 +140,89 @@ int M[12][12]={
 - goal is row 2, column 12 (x=0xb, y=1)
 - ssssdsssddsssdddwwwddwwwwdwwd
 - lol
+
+## Project 03 Hacking Network Highways
+
+### .01 - netcat
+
+```bash
+nc 10.0.0.3 31337
+```
+
+### .02 - netcat listener
+
+```bash
+nc -l 31337
+```
+
+### .03 - nmap and netcat
+
+```bash
+nmap 10.0.0.0-255 # found in .142
+nc 10.0.0.142 31337
+```
+
+### .04 - nmap in parallel and netcat
+
+- `-sn` for ARP ping scan - no ports just discover host
+- `--min-parallelism 10` for at least 10 probes at a time
+- consider using `-T4` or `-T5` timing templates
+- checked
+  - `10.0.0.0/19` - only us at .2
+  - `10.0.32.0/19` - nothing
+  - `10.0.64.0/19` - 10.0.90.244 and port is 31337 as expected. stopped here
+
+### .05 - tcpdump
+
+- `tcpdump -A 'tcp port 31337'`
+  - `-A` to print content as ASCII
+
+### .06 - tcpdump and flow
+
+- inspecting the /challenge/run python script, we see that it's sending one character at a time, after encoding them
+- `tcpdump -s 65535 -nntA 'tcp port 31337' -w /home/hacker/my_pcaps/3.06.pcap`
+  - `-s` to grab full packet (?)
+  - `-nn` to avoid resolution of hostnames or port numbers
+  - `-t` to exclude timestamp
+  - `-A` to print content as parsable ASCII. important!!!
+- then we use scapy to read the packets, skip alternating duplicates, decode, and form a single string
+- ehh i messed up something but whatever
+
+### .07 - mimic and listen
+
+- `ip addr add 10.0.0.2 dev eth0` assign the address to us, fake
+- `nc -l 10.0.0.2 31337`
+
+### .08 - ether scapy
+
+- jfc
+- ALWAYS be explicit and define the src addresses
+- didn't define the src MAC addr, so packets kept going thru `lo` instead of `eth0`
+- too stupid to realize it in time too
+- anyway, get current MAC addr of `eth0`
+- craft Ether packet to given dest addr with type `0xFFFF`
+- `srp(pkt, iface='eth0')`
+
+### .09 - IP scapy
+
+- similar
+- set IP addr with `ifconfig eth0 10.0.0.2`
+- add l3 with src and dest IP addr, `proto=0xFF`
+- since we need MAC as well, use `srp`, not `sr`
+
+### .10 - TCP scapy
+
+- similar
+- again, set IP addr
+- add l4 with src and dest TCP port, `flags=0x1F` to set ACK (0x10), PSH (0x08), RST (0x04), SYN (0x02), FIN (0x01) flags
+- `srp` again
+
+### .11 - TCP handshake
+
+- send SYN with specified seq and ack numbers - 31337 both
+- get SYNACK
+  - has ack of 31338, which will be our next syn
+  - has random syn, add 1 to get next ack
+- send ACK with next syn and ack numbers
+
+### .12 - ARP scapy
