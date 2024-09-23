@@ -1,4 +1,4 @@
-# CSE 545 pwn.college Dojo
+# CSE 545 - Fall '24 pwn.college Dojo
 
 ## Project 01 Linux Lifter
 
@@ -61,7 +61,7 @@
 
 - mangling is adding 3 then xor with 2. so just xor with 2, then subtract 3
 
-#### lab 2a.02
+### lab 2a.02
 
 ![lab code snippet](ss2.png)
 
@@ -203,6 +203,8 @@ nc 10.0.0.142 31337
 - craft Ether packet to given dest addr with type `0xFFFF`
 - `srp(pkt, iface='eth0')`
 
+### lab 3a was chill, no notes
+
 ### .09 - IP scapy
 
 - similar
@@ -226,3 +228,30 @@ nc 10.0.0.142 31337
 - send ACK with next syn and ack numbers
 
 ### .12 - ARP scapy
+
+- meh, arp opcode is 2
+
+### .13 - ARP spoofing
+
+- meh, just crafting ARP and tcpdump
+
+### lab 3b was chill, no notes
+
+### .14 - MiTM ARPing
+
+- shit's getting too easy, let's not look at /challenge/run
+- first, get target's macs, then arp spoof
+- we don't have NET_ADMIN, so can't set ip_forward in sysctl to control MITM directly,
+- first, capture packets, check raw loads
+- we observe that a sequence repeats:
+  - 10.0.0.3:31337 sends a command: "SECRET", to 10.0.0.4 at a random port
+    - note: how does 3 know which port to send to?
+  - 4 responds with a secret, it's in ascii?
+  - 3 sends a list of available (?) commands - echo, flag, and then asks for a command
+  - 4 responds with echo, and sends "Hello, World!"
+  - 3 echoes it back
+- connection closes, repeats with another randomized port for 4
+- note that 3 sends a secret and a list of commands that includes a flag command
+- craft a packet masquerading as 4, with the flag command, wait for a secret to arrive and put it in the packet
+- in the time it takes 3 to do the legitimate echo from 4, we could probably send the flag command to 3 and have it processed in the same ephemeral connection
+- let's try
