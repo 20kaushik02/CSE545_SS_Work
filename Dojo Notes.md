@@ -246,6 +246,7 @@ nc 10.0.0.142 31337
 - we observe that a sequence repeats:
   - 10.0.0.3:31337 sends a command: "SECRET", to 10.0.0.4 at a random port
     - note: how does 3 know which port to send to?
+      - [after 3d] idiot, 4 opens the tcp handshake
   - 4 responds with a secret, it's in ascii?
   - 3 sends a list of available (?) commands - echo, flag, and then asks for a command
   - 4 responds with echo, and sends "Hello, World!"
@@ -253,5 +254,105 @@ nc 10.0.0.142 31337
 - connection closes, repeats with another randomized port for 4
 - note that 3 sends a secret and a list of commands that includes a flag command
 - craft a packet masquerading as 4, with the flag command, wait for a secret to arrive and put it in the packet
+  - [after 3d] idiot, read the code, you don't need the secret, just hijack the connection
 - in the time it takes 3 to do the legitimate echo from 4, we could probably send the flag command to 3 and have it processed in the same ephemeral connection
 - let's try
+
+### lab 3c was chill, no notes
+
+### lab 3d
+
+#### .2 - mitm arping
+
+- same as 3.14, approaching this first for deadline
+- client at 3.13.37.4, random port
+- server at 3.13.37.3, port 1992
+- flow:
+  - TCP handshake:
+    - client -> SYN -> server
+    - server -> SYNACK -> client
+    - client -> ACK -> server
+  - secret is sent:
+    - server -> PUSHACK -> asks for secret -> client
+    - client -> ACK, then PUSHACK -> secret string \n-> client
+    - server -> ACK, then PUSHACK -> secret confirmed -> client
+      - at this point, inject BACKDOOR packet before the actual client
+    - client -> ACK, then PUSHACK -> ECHO: -> server
+  - after backdoor, send a FLAG packet
+
+### going back to continue 3.14 with this understanding
+
+---
+
+- [after 3d] updated understanding
+  - client at 10.0.0.4, random port
+  - server at 10.0.0.3, port 31337
+  - flow:
+    - TCP handshake:
+      - client -> SYN -> server
+      - server -> SYNACK -> client
+      - client -> ACK -> server
+    - secret is sent:
+      - server -> PUSHACK -> asks for secret -> client
+      - client -> ACK, then PUSHACK -> secret string \n-> client
+      - server -> ACK, then PUSHACK -> list of commands -> client
+        - at this point, inject FLAG command before the actual client
+      - client -> ACK, then PUSHACK -> ECHO -> server
+
+## Project 04 Hijacking Binary Power (Pwning)
+
+- seems we have access to the source code, and we're given a suid-set executable
+
+### .02 - exec them all
+
+- title helped
+- `exec -a <passwd> /challenge/run`
+
+### .03 - altering arg[0]
+
+- +3 lops off first 3 chars
+
+### .04 - symmer
+
+- symlink /flag to ~/flag
+
+### .05 - when is a secret not secret
+
+### .10 - somewhere over the rainbow
+
+- online tool
+
+### .11 - byte compare
+
+- this strncmp takes the lower length (doesn't take null tho), so just give it a single byte
+- only 256 possible values, bruteforce
+
+```bash
+for i in $(seq 0 255); do
+  i_chr=$(printf "\x$(printf "%x" "$i")")
+  /challenge/run $i_chr
+done
+```
+
+### .12 - symmer in time
+
+- 5 second window
+- initially have a dummy `~/flag`, run the challenge, within 5 seconds delete it and create it as a symlink to `/flag`
+
+### .13 - time after time
+
+- 2 second window
+- creates tmp files, writes target to one, sleeps for 2 secs, then reads from it and compares with passwd checksum
+- have `umask 002 ; echo <checksum> > /tmp/hash_output_1000_<randnum>` in one shell ready for tab completion of the random number part
+- run `/challenge/run something` in another shell, then run the above
+
+### .14 - controlling your path
+
+- make sure PATH is set so that it uses your program
+- don't specify a shell so that it uses `/bin/sh` - [see here](https://www.qnx.com/developers/docs/6.5.0SP1.update/com.qnx.doc.neutrino_lib_ref/e/execlp.html#:~:text=If%20the%20process%20image%20file)
+  > "If the process image file isn't a valid executable object, the contents of the file are passed as standard input to a command interpreter conforming to the system() function. In this case, the command interpreter becomes the new process image."
+- i assume the command interpreter that gets used has the SUID bit
+
+### .15 - blind leading the blind
+
+- basically, stdout and stderr for the child are set to `/dev/null` so instead of spawning root shell, use `cat flag > output` and read output

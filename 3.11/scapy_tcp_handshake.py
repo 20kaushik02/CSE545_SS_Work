@@ -9,7 +9,7 @@ syn_pkt=l2/l3/syn_l4
 ans,unans=srp(syn_pkt, iface='eth0')
 print(ans[0].answer[TCP])
 
-ack_l4=TCP(sport=31337, dport=31337, seq=31338, ack=ans[0].answer[TCP].seq + 1, flags=0x10)
+ack_l4=TCP(sport=31337, dport=31337, seq=ans[0].answer[TCP].ack, ack=ans[0].answer[TCP].seq + 1, flags=0x10)
 ack_pkt=l2/l3/ack_l4
 
 ans,unans=srp(ack_pkt, iface='eth0')
