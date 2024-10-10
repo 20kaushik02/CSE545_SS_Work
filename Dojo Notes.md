@@ -356,3 +356,21 @@ done
 ### .15 - blind leading the blind
 
 - basically, stdout and stderr for the child are set to `/dev/null` so instead of spawning root shell, use `cat flag > output` and read output
+
+### .16 - arg wars VI - return of the hacker
+
+- decompiler showed set of filtered characters, quotes and backslashes are not there
+- also .17 checks for backslashes, so i assume backslashes solves this
+- but i got stuck, TA said try the 'prequels' first then come back lol
+
+### lab 4a.1 - easy overflow
+
+- standard buffer overflow vuln
+- gdb shenanigans
+- shift-ctrl-@ inserts a null character it seems (remember for .16)
+- enough gdb, let's move to big guns - pwntools
+- checksec says no stack canary or PIE
+- all g then
+- calculate offset from vulnerable variable location to saved RIP(return instruction pointer) location
+- get address of target function to execute
+- craft payload accordingly
