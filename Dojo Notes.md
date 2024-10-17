@@ -57,9 +57,9 @@
 
 - 'mangling' is just subtracting 3 from the char's ascii value. so just add 3 to the key
 
-### .03 - xor plus
+### .03 - XOR plus
 
-- mangling is adding 3 then xor with 2. so just xor with 2, then subtract 3
+- mangling is adding 3 then XOR with 2. so just XOR with 2, then subtract 3
 
 ### lab 2a.02
 
@@ -374,3 +374,33 @@ done
 - calculate offset from vulnerable variable location to saved RIP(return instruction pointer) location
 - get address of target function to execute
 - craft payload accordingly
+
+### lab 4b.1 - overflow + shellcoding 1
+
+- buffer overflow vuln
+- have to write and inject shellcode
+- checksec says protections are disabled
+- pwntools generated shellcode for `/bin/sh`:
+  - push `/bin/sh` to stack, set `ebx` to this address
+  - setting argv - push `sh` null-terminated (hv to use XOR trick to null-terminate, which isn't necessary for memcpy tho), set `ecx` to this address
+  - setting env - XOR out `edx`
+  - executing execve - syscall `execve`
+- so
+  - get shellcode on the stack
+  - calc offset from rsp to start of shellcode
+    - rsp is obtained at runtime, program outputs it
+    - if we put shellcode in the vulnerable variable, we can use its location to store shellcode since its not being modified
+    - and in this case, rsp=variable location cuz last variable on stack
+  - add offset to rsp to get shellcode location
+  - put that as target rip
+  - padding in between
+  - boom
+
+### lab 4b.2 - overflow + shellcoding 2
+
+- ummm
+- apparently the difference was replacing memcpy with strcpy
+- memcpy doesn't care about null bytes, strcpy does
+- but since i used robust shellcode from pwntools ahaha....
+- it already took care of that
+- so 4b.1 solution applied here too
