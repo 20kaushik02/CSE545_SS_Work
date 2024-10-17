@@ -404,3 +404,78 @@ done
 - but since i used robust shellcode from pwntools ahaha....
 - it already took care of that
 - so 4b.1 solution applied here too
+
+### .19 - pile on
+
+- unsanitized input to system() - basic shell injection
+
+### .20 - | escape from cmd
+
+- input escaped by double quotes
+- just tried randomly, this worked to inject:
+
+```bash
+/challenge/run ';`lint`'
+```
+
+### .21 - substitute commander
+
+- checked for double quote in input, so prev soln worked here too
+
+### .22 - arg wars I - the phantom command
+
+- find command
+- injection vuln, only checks for semicolon
+- so same works again, replace with `&&`
+
+### .23 - arg wars II - attack of the chars
+
+- checks for dollar in addition (variable substitution)
+- so same works again
+
+### .24 - arg wars III - revenge of the tick
+
+- ah now the backtick has been filtered. but not the ampersand!
+
+```bash
+/challenge/run 'test && lint'
+```
+
+### .25 - arg wars IV - a new hole
+
+- now the source is not available, hv to decompile
+- we see that now ampersand has been filtered out as well
+- lets try quotes to have find do an exec
+
+```bash
+/challenge/run test" -exec /home/hacker/lint {} +"
+```
+
+### .26 - arg wars V - the system strikes back
+
+- pipe symbol now added to filter 
+- luckily we didn't use that
+
+### .27 - overflow gods
+
+- buffer overflow vuln
+- `^A` is ASCII 1
+
+### .28 - the power of a god
+
+- just overflow again, doesn't matter if stack or global var
+
+### .29 - direct is best
+
+- we get direct access to set any value on stack - control flow vuln (lol)
+- set saved rip to target function address
+
+### .30 - stack direct
+
+- similar access. no source code
+- decompiled, found a `flag==0xcafebabe` check to execute a root shell
+
+### .31 - data direct
+
+- even more direct access - no addition of address, just direct address control (lol)
+- set flag to `0xdeadfeed`
