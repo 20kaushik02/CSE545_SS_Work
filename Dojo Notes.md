@@ -453,7 +453,7 @@ done
 
 ### .26 - arg wars V - the system strikes back
 
-- pipe symbol now added to filter 
+- pipe symbol now added to filter
 - luckily we didn't use that
 
 ### .27 - overflow gods
@@ -479,3 +479,15 @@ done
 
 - even more direct access - no addition of address, just direct address control (lol)
 - set flag to `0xdeadfeed`
+
+### lab 4b.3 - overflow + a defense
+
+- similar to 4b.1 and 4b.2
+- but here we dont have RSP so we cant point RIP to it
+- instead there's a function that has `jmp *%rsp`
+- so first, pad the vulnerable stack buffer upto the saved RIP's address
+- put that function's address in it
+- now, remember that when a function returns, it pops its stack
+- so we need to put our shellcode after this saved RIP's location
+- that way, when the current function returns into the target function, the target function's RSP will point to the shellcode
+- boom
