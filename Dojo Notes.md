@@ -491,3 +491,20 @@ done
 - so we need to put our shellcode after this saved RIP's location
 - that way, when the current function returns into the target function, the target function's RSP will point to the shellcode
 - boom
+
+### lab 4c.1 - rop
+
+- buffer overflow vuln, but NX is enabled on stack
+- ROP time
+- we need:
+  - location of a string "/bin/sh" in rdi (path)
+  - 0 in rdx (argv)
+  - 0 in rsi (envp)
+  - 0x3b in rax (execve)
+  - finally run syscall
+- ASLR is enabled, but program gives us the address of libc
+- from pwn, we have ROP(ELF(libc.so path)) to get ROP gadgets from libc
+  - other tools exist, like ROPGadget.py, one_gadget, ropium
+- find necessary gadgets and args
+  - some might not exist in the exact form required, maybe some baggage is attached, or a roundabout way is needed (xor instead of directly loading, etc)
+- boom
