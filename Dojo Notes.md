@@ -508,3 +508,21 @@ done
 - find necessary gadgets and args
   - some might not exist in the exact form required, maybe some baggage is attached, or a roundabout way is needed (xor instead of directly loading, etc)
 - boom
+
+### lab 4c.2 - rop
+
+- this time, base address of libc isn't given by the program
+- we need to leak it
+  - the program's PLT - procedure linkage table - has the address of any library functions that have been called at least once
+  - PLT is stored in the code section (?) and won't change per execution
+  - if the program calls puts/printf, we can get its address inside libc and calc libc base from that
+  - to get this address, we craft a ROP chain
+- leak rop chain
+  - get the pointer to puts/printf that's inside PLT, and put it in rdi
+  - then put the same in the next rip itself
+    - so we have now done `puts(&puts)`
+  - then address of the vuln function, to reset execution
+- this prints out the address of puts from libc
+- we know offset of puts from libc base, so we can get libc base
+- rest is same as before
+- boom
