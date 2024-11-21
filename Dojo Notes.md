@@ -526,3 +526,20 @@ done
 - we know offset of puts from libc base, so we can get libc base
 - rest is same as before
 - boom
+
+### lab 4d.1 - off by 1
+
+- off by one
+  - limited control over buffer
+  - usually a mistake in code - a loop that executes one time too many, a buffer one byte too long, etc.
+  - here, giving the right value (ascii 7e) as mentioned, will do a buffer overflow to change a pointer's value and trigger the target fn
+
+### lab 4d.2 - hash off by 1
+
+- logic is same
+- but we don't know target address value
+- so bruteforce
+
+### lab 4d.3 - off by one pivot
+
+honestly idk just check class vid and script
