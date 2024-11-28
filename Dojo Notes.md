@@ -544,6 +544,8 @@ done
 
 honestly idk just check class vid and script
 
+### lab 5a - web intro
+
 ### lab 5a.1 - get command injection
 
 - unsanitized url query param as grep input
@@ -570,3 +572,26 @@ honestly idk just check class vid and script
 
 - not really session hijack, flag is the password, sent in plaintext
 - tcpdump access given, done
+
+### lab 5b - sql injection
+
+### lab 5b.1 - sql pass to session
+
+## Project 04 - continued
+
+### .16 - arg wars VI - return of the hacker - reattempt
+
+- backslash isn't filtered
+- escape the double quote with a backslash to break apart the find command
+- `/challenge/run "lint\" -exec {} +\""`
+
+### .17 - arg wars VII - the hacker awakens
+
+- they filter backtick? idk
+- idk why but quote needs to be changed
+- `/challenge/run "\"lint\" -exec {} +"`
+
+### .18 - arg wars VIII - the last hack
+
+- went back to being same as .16
+- idek
