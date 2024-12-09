@@ -749,3 +749,10 @@ payload = input_str + padding + input_str_hash
 - stack pivot + shellcode
 - can't overwrite saved rip but can overwrite rbp
 - use it to repeatedly pop into rsp when leaving, thus making it reach the shellcode
+
+### .44 - working in a coal mine
+
+- stack canary, but set to static value lol
+- bruteforce to get canary
+- buffer overflow, but again too small, so have to go for env var
+- also similar stack pivot as we can't directly overwrite saved rip
