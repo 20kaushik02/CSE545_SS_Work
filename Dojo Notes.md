@@ -721,3 +721,31 @@ payload = input_str + padding + input_str_hash
 - where else can we put it?
 - one solution is to place shellcode in an env variable and preface it with a sufficiently large NOP sled
 - then overwrite saved rip with this shellcode's location, or at least its proximity so that it gets caught in the NOP sled
+
+### .40 - one step too many
+
+- off by one vuln (checks `index_pos > sizeof(buffer)` for out of bounds, when it should be `>=`)
+- control program flow (exit func ptr)
+- current exit ptr is `0x401191`, target fn is at `0x401176`
+- last byte alone needs to be changed
+- bruteforce - generate hashes as specified, then check for a hash that ends with the `76` byte
+- boom, string
+
+### .41 - little dipper
+
+- buffer overflow + shellcode injection, over the network
+- rsp is given by the program, but it's of the caller stack frame of the function that contains the buffer overflow
+- no matter, we calculate the offset
+- standard injection after that, only difference is over network
+
+### .42 - big dipper
+
+- same as before, but buffer is too small for usual shellcode
+- so use the technique from 4.39, i.e. placing shellcode in an environment variable
+- place similar NOP sled and shellcode yada yada
+
+### .43 - twist and shout
+
+- stack pivot + shellcode
+- can't overwrite saved rip but can overwrite rbp
+- use it to repeatedly pop into rsp when leaving, thus making it reach the shellcode
